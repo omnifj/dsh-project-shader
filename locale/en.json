@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Project shader",
+    "description": "Colors each project in the left workspace sidebar and the sessions under it: a vertical \"|\" bar on the project row, a left-to-right color wash over its folder icon, and a tinted folder glyph; each session under it carries a lighter wash in the same color. A \"Project shader\" entry in the sidebar's bottom icon column opens the settings panel where everything is adjustable — gradient on/off, intensity and reach for project and session rows, bar on/off and width, folder-glyph tint, archived-row coloring, and each project's color (palette, custom hex, automatic, or none). The quoted defaults are the shipped look. The settings panel is bilingual in Chinese and English, defaulting to Chinese unless the app language is English. Colors can also be switched from a project header's right-click menu (\"Project color\"). Choices live in this browser's local storage only: nothing leaves the device, clearing site data resets everything to defaults, and settings do not sync across devices or browsers. While enabled, the tinted folder glyph takes the place of the row's \"contains the open session\" highlight. Disabling or removing the plugin restores the plain sidebar.",
+    "detail": "docs/DETAIL.md"
+  }
+}

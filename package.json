@@ -1,0 +1,62 @@
+{
+  "name": "dsh-project-shader",
+  "version": "1.0.0",
+  "description": "Color-code projects in the DeepSeek Harness workspace sidebar: a per-project gradient wash, \"|\" bar and tinted folder glyph, lighter tints for the sessions under it, palette/custom-hex/auto colors, and a bilingual settings panel.",
+  "type": "module",
+  "license": "MIT",
+  "author": "omnilm",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "dsh-bundle",
+    "plugin",
+    "sidebar",
+    "shader",
+    "color",
+    "workspace"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omnifj/dsh-project-shader.git"
+  },
+  "homepage": "https://github.com/omnifj/dsh-project-shader#readme",
+  "bugs": {
+    "url": "https://github.com/omnifj/dsh-project-shader/issues"
+  },
+  "engines": {
+    "dsh": ">=0.2.2-rc.5 <0.3.0"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "docs",
+    "icon.svg"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-context-menu",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ]
+    }
+  }
+}

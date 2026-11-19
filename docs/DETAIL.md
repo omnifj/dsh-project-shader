@@ -1,0 +1,1 @@
+![Two project groups in the workspace sidebar, each project row carrying a vertical color bar and a left-to-right wash over its folder glyph, session rows tinted with a lighter wash, next to the plugin's settings panel](preview.svg)
