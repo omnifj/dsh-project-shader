@@ -236,14 +236,16 @@ dsh plugin --profile web add D:/Project/dsh-plugin/dsh-project-shader
 
 ## 更新与卸载
 
-**更新**：插件页面里对第三方插件采用「卸载再安装」的方式升级：
+**快速更新**：所有设置保存在浏览器 localStorage，与插件包无关——**重装不丢配置**，放心更新。
 
-```bash
-dsh plugin --profile web remove dsh-project-shader
-dsh plugin --profile web add dsh-project-shader@1.7.1
-```
+- **桌面版**：**Plugins** → **Installed plugins** 里卸载 **Project shader** → **Add plugin** 输入 `dsh-project-shader` → **Install** → **Enable now**，立即生效。
+- **装了 dshmarket 插件市场**：市场里搜 `dsh-project-shader` 一键重装即为最新版。
+- **CLI profile**（把 web 换成实际 profile 名）：
 
-或在 **Plugins** 页面里卸载后重新安装。升级不会清掉你的 `localStorage` 设置（键名不变）。
+  ```bash
+  dsh plugin --profile web remove dsh-project-shader
+  dsh plugin --profile web add dsh-project-shader@1.7.1
+  ```
 
 **停用/卸载**：
 
