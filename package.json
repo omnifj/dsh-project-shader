@@ -1,6 +1,6 @@
 {
   "name": "dsh-project-shader",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "Color-code projects in the DeepSeek Harness workspace sidebar: a per-project gradient wash, \"|\" bar and tinted folder glyph, lighter tints for the sessions under it, sliders whose ends act as off/solid-fill switches, a fluorescent neon look selectable for light/dark/both themes, palette/custom-hex/auto colors, and a bilingual settings panel.",
   "type": "module",
   "license": "MIT",

@@ -162,7 +162,7 @@ dsh plugin --profile web add D:/Project/dsh-plugin/dsh-project-shader
 - **项目行**：颜色浓度、渐变范围、竖线宽度、图标着色。
 - **会话行**：颜色浓度、渐变范围，以及归档会话是否着色。
 - **荧光效果**：荧光在哪种主题生效（白天 / 夜晚 / 同时，默认夜晚）与强度；当前正生效时行尾会显示「当前生效中」。
-- **会话状态**：运行中呼吸光环（强度可调）、等待输入警告标记、完成未读成功标记，各自独立开关。
+- **会话状态**：运行中呼吸光环（强度可调）、等待输入警告标记、完成未读成功标记，各自独立开关；折叠起来的项目行会镜像显示其隐藏会话中最优先的状态标记（展开即交还给会话行），同样可独立开关。
 - **高级**：跟随主题品牌色、色彩友好模式。
 - **项目颜色**：顶部可按名称/路径筛选，说明文字下有一条 📌 置顶提示；逐个项目选择调色板颜色、输入自定义 hex、点 ★ 强调、点 📌 置顶（可多选，↑ ↓ 调序）、点「自动」恢复哈希分配、或点「不着色」让该项目完全不上色。
 - **设置数据**：导出 / 导入 JSON，跨浏览器携带配置。
@@ -192,6 +192,7 @@ dsh plugin --profile web add D:/Project/dsh-plugin/dsh-project-shader
 | 呼吸强度 | 会话状态 | `50%` | 0–100% |
 | 等待输入警告标记 | 会话状态 | 开 | 开 / 关 |
 | 完成未读成功标记 | 会话状态 | 开 | 开 / 关 |
+| 折叠项目状态汇总 | 会话状态 | 开 | 开 / 关 |
 | 置顶 📌 与顺序 ↑↓ | 单个项目 | 不置顶 | 置顶 / 调序 |
 | 跟随主题品牌色 | 高级 | 关 | 开 / 关 |
 | 色彩友好模式 | 高级 | 关 | 开 / 关 |
@@ -244,7 +245,7 @@ dsh plugin --profile web add D:/Project/dsh-plugin/dsh-project-shader
 
   ```bash
   dsh plugin --profile web remove dsh-project-shader
-  dsh plugin --profile web add dsh-project-shader@1.7.1
+  dsh plugin --profile web add dsh-project-shader@1.8.0
   ```
 
 **停用/卸载**：
@@ -294,7 +295,7 @@ dsh-project-shader/
 - On the dark theme a neon mode (default: dark only; switchable to light or both) brightens every color toward a fluorescent tone in OKLCH (perceptually uniform, grays stay gray) and adds a soft glow over the bar, wash and glyph; intensity is tunable and 0 turns it off.
 - Sliders double as switches: wash intensity 0 disables the gradient, 100% fills the whole row with solid color (text auto-contrasts); bar width 0 hides the bar; double-click any slider to restore its default.
 - Ten presets (soft / vivid / minimal / neon party / bars only / full fill / whisper / bold / night owl / icon spark) and a sticky live preview strip that shows every session state at once (plain, running, awaiting input, unread, archived) and stays pinned while you scroll make the panel WYSIWYG; sections are collapsible and remember their fold; settings export/import to a JSON file.
-- Session status markers: a breathing halo while running, a warning edge while awaiting input, a success edge for unread completions — each individually switchable.
+- Session status markers: a breathing halo while running, a warning edge while awaiting input, a success edge for unread completions — each individually switchable. Folded project rows mirror the strongest status of the sessions they hide (e.g. the breathing halo) until the group expands again; the rollup has its own switch.
 - Color-friendly mode (Okabe–Ito palette, doubled bars, textured washes), follow-the-theme brand colors, a per-project emphasis star, project search, and a right-click "shuffle a color" item.
 - Optional pinned ordering with no switch: click 📌 on any project row (multi-select) to float pinned groups to the top of the sidebar, marked with a 📌 badge at the row's end and a fine color rim; ↑ ↓ buttons set the order, which doubles as a color-importance ranking. With nothing pinned the feature simply does nothing. The preview's sample color is selectable and the breathing pulse strength is a slider.
 - A **Project shader** panel (sidebar bottom icon column) exposes every global parameter; a project's right-click menu offers **Project color** for quick changes.
@@ -307,9 +308,9 @@ Install (pick one):
 # B. npm + CLI (desktop profile is managed by the Desktop app; use the UI there)
 dsh plugin --profile web add dsh-project-shader
 # C. straight from GitHub (pin a tag to stay stable)
-dsh plugin --profile web add github:omnifj/dsh-project-shader#v1.7.1
+dsh plugin --profile web add github:omnifj/dsh-project-shader#v1.8.0
 # D. local tarball
-dsh plugin --profile web add ./dsh-project-shader-1.7.1.tgz
+dsh plugin --profile web add ./dsh-project-shader-1.8.0.tgz
 # E. local directory (development link)
 dsh plugin --profile web add D:/path/to/dsh-project-shader
 ```

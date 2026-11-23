@@ -27,7 +27,10 @@
  * - Session status (via the optional `useSessionStatus` slot prop) adds
  *   markers: a breathing halo while running, a warning edge while awaiting
  *   input, a success edge for unread completions — each individually
- *   switchable. A colorblind mode swaps in the Okabe–Ito palette with
+ *   switchable. Collapsed projects unmount their session rows, so a folded
+ *   project row mirrors the strongest hidden status (aria-expanded="false"
+ *   only; it hands the markers back the moment the group expands). A
+ *   colorblind mode swaps in the Okabe–Ito palette with
  *   doubled bars and textured washes; brand-first mode seeds automatic
  *   colors from the active theme's accent.
  */
@@ -96,6 +99,7 @@ window.__ModuleLoader__.load({
       statusRunning: true,
       statusPending: true,
       statusUnread: true,
+      statusCollapsed: true,
       statusPulse: 50,
     };
     /**
@@ -157,7 +161,7 @@ window.__ModuleLoader__.load({
     };
     const BOOLEAN_KEYS = [
       'projectIconTint', 'colorArchived', 'brandFirst', 'colorblind',
-      'statusRunning', 'statusPending', 'statusUnread',
+      'statusRunning', 'statusPending', 'statusUnread', 'statusCollapsed',
     ];
     /** Where the neon look applies: light theme only, dark only, or both. */
     const NEON_MODES = ['light', 'dark', 'both'];
@@ -625,7 +629,12 @@ window.__ModuleLoader__.load({
           if (glows) shadowParts.push(`inset ${width + 10}px 0 16px -8px ${glowOf(color)}`);
         }
         if (pinned) shadowParts.push(`inset 0 0 0 1px color-mix(in srgb,${color} 38%,transparent)`);
-        if (shadowParts.length > 0) projectDeclarations.push(`box-shadow:${shadowParts.join(',')}`);
+        if (shadowParts.length > 0) {
+          // The composed bar/glow/hairline lives in a custom property so the
+          // folded-project status rollup below can layer its marker on top
+          // without dropping it (box-shadow is not additive across rules).
+          projectDeclarations.push(`--dsh-ps-bar:${shadowParts.join(',')}`, 'box-shadow:var(--dsh-ps-bar)');
+        }
         const projectOpacity = emphasize(boost(global.projectOpacity), emphasis);
         if (projectOpacity > 0) {
           let layer = washLayer(color, projectOpacity, global.projectExtent);
@@ -676,6 +685,37 @@ window.__ModuleLoader__.load({
             }
           }
         }
+        // Collapsed projects unmount their session rows (the host tree
+        // renders no session children while a group is folded), so their
+        // status markers vanish. Mirror the strongest hidden marker onto the
+        // project row, scoped to aria-expanded="false" so it disappears the
+        // moment the group expands and the real session markers return.
+        // Priority matches the session rows: pending > running > unread.
+        // The marker composes with the bar kept in --dsh-ps-bar (fallback
+        // keeps the declaration valid when the bar itself is switched off).
+        if (global.statusCollapsed && statusEnabled && statuses instanceof Map) {
+          let rollupPending = false;
+          let rollupRunning = false;
+          let rollupUnread = false;
+          for (const sessionId of workspace.sessionIds ?? []) {
+            if (!global.colorArchived && archived.has(sessionId)) continue;
+            const status = statuses.get(sessionId);
+            if (status === undefined || status === null) continue;
+            if (status.pendingInteraction !== undefined && status.pendingInteraction !== null) rollupPending = true;
+            else if (status.running === true) rollupRunning = true;
+            else if (status.completionUnread === true) rollupUnread = true;
+          }
+          const collapsedRow = `${row}[aria-expanded="false"]`;
+          const bar = 'var(--dsh-ps-bar, inset 0 0 0 transparent)';
+          if (global.statusPending && rollupPending) {
+            rules.push(`${collapsedRow}{box-shadow:inset 2px 0 0 var(--dsw-alias-state-warn-primary),inset 14px 0 18px -10px color-mix(in srgb,var(--dsw-alias-state-warn-primary) 55%,transparent),${bar}}`);
+          } else if (global.statusRunning && rollupRunning) {
+            const pulseSeconds = (3 - 1.6 * (global.statusPulse / 100)).toFixed(2);
+            rules.push(`${collapsedRow}{--dsh-ps-c:${color};animation:dsh-ps-pulse-project ${pulseSeconds}s ease-in-out infinite}`);
+          } else if (global.statusUnread && rollupUnread) {
+            rules.push(`${collapsedRow}{box-shadow:inset 2px 0 0 var(--dsw-alias-state-success-primary),${bar}}`);
+          }
+        }
       }
       // The breathing halo reads its color from the row's --dsh-ps-c, so one
       // shared keyframe block serves every running session. The pulse
@@ -685,6 +725,11 @@ window.__ModuleLoader__.load({
         const reach = Math.round(6 + 12 * k);
         const blur = Math.round(10 + 16 * k);
         rules.push(`@keyframes dsh-ps-pulse{0%,100%{box-shadow:inset 2px 0 0 var(--dsh-ps-c)}50%{box-shadow:inset 2px 0 0 var(--dsh-ps-c),inset ${reach}px 0 ${blur}px -6px var(--dsh-ps-c)}}`);
+        // Folded project rows pulse the same halo but re-append their own
+        // bar/glow/hairline (--dsh-ps-bar) in every frame, since a running
+        // animation replaces the row's static box-shadow entirely.
+        const bar = 'var(--dsh-ps-bar, inset 0 0 0 transparent)';
+        rules.push(`@keyframes dsh-ps-pulse-project{0%,100%{box-shadow:inset 2px 0 0 var(--dsh-ps-c),${bar}}50%{box-shadow:inset 2px 0 0 var(--dsh-ps-c),inset ${reach}px 0 ${blur}px -6px var(--dsh-ps-c),${bar}}}`);
       }
       // Pinned ordering needs no switch: any pin turns it on, no pins means
       // nothing moves. The sidebar's group wrapper is a plain block child of
@@ -968,11 +1013,19 @@ window.__ModuleLoader__.load({
       workspaceId: 'dsh-ps-preview',
       sessionIds: ['dsh-ps-preview.s1', 'dsh-ps-preview.s2', 'dsh-ps-preview.s3', 'dsh-ps-preview.s4', 'dsh-ps-preview.s5'],
     };
+    // A second mock project rendered folded: its session rows stay hidden,
+    // so its row carries the collapsed-project status rollup instead.
+    const PREVIEW_WORKSPACE_COLLAPSED = {
+      workspaceId: 'dsh-ps-preview-collapsed',
+      sessionIds: ['dsh-ps-preview-collapsed.s1', 'dsh-ps-preview-collapsed.s2'],
+    };
     const PREVIEW_ARCHIVED = ['dsh-ps-preview.s5'];
     const PREVIEW_STATUSES = new Map([
       ['dsh-ps-preview.s2', { running: true, pendingInteraction: undefined, completionUnread: false }],
       ['dsh-ps-preview.s3', { running: false, pendingInteraction: { key: 'demo', kind: 'demo', sessionId: 'dsh-ps-preview.s3' }, completionUnread: false }],
       ['dsh-ps-preview.s4', { running: false, pendingInteraction: undefined, completionUnread: true }],
+      ['dsh-ps-preview-collapsed.s1', { running: true, pendingInteraction: undefined, completionUnread: false }],
+      ['dsh-ps-preview-collapsed.s2', { running: false, pendingInteraction: undefined, completionUnread: true }],
     ]);
     function PreviewPane(props) {
       const { global, isDark, t, palette, anyPinned } = props;
@@ -983,7 +1036,7 @@ window.__ModuleLoader__.load({
         ...(anyPinned === true ? { rank: 1 } : {}),
       };
       const override = Object.keys(overrideEntry).length > 0 ? { 'dsh-ps-preview': overrideEntry } : {};
-      const css = buildCss([PREVIEW_WORKSPACE], PREVIEW_ARCHIVED, global, override, isDark, PREVIEW_STATUSES)
+      const css = buildCss([PREVIEW_WORKSPACE, PREVIEW_WORKSPACE_COLLAPSED], PREVIEW_ARCHIVED, global, override, isDark, PREVIEW_STATUSES)
         .split('\n')
         .filter((line) => !line.startsWith('[role="tree"]'))
         .join('\n');
@@ -1008,6 +1061,15 @@ window.__ModuleLoader__.load({
             'data-row-key': `session:dsh-ps-preview.${id}`,
             ...(id === 's5' ? { style: { opacity: 0.55 } } : {}),
           }, caption === null ? t('preview.session') : `${t('preview.session')} · ${caption}`)),
+          h('div', {
+            className: 'dsh-ps-mockrow',
+            'data-row-key': 'workspace:dsh-ps-preview-collapsed',
+            'aria-expanded': 'false',
+          },
+            h('span', null, '📁'),
+            h('span', null, '›'),
+            h('span', null, `${t('preview.project')} · ${t('preview.collapsed')}`),
+          ),
         ),
         h('div', { className: 'dsh-ps-previewdots', role: 'radiogroup', 'aria-label': t('preview.color') },
           h('span', { className: 'dsh-ps-previewdots-label' }, t('preview.color')),
@@ -1212,6 +1274,8 @@ window.__ModuleLoader__.load({
               h(Toggle, { label: t('row.statusPending'), checked: global.statusPending, onChange: (v) => setGlobalField('statusPending', v) })),
             row(t('row.statusUnread'), `${t('row.statusUnread.hint')} · ${t('hint.defaultOn')}`,
               h(Toggle, { label: t('row.statusUnread'), checked: global.statusUnread, onChange: (v) => setGlobalField('statusUnread', v) })),
+            row(t('row.statusCollapsed'), `${t('row.statusCollapsed.hint')} · ${t('hint.defaultOn')}`,
+              h(Toggle, { label: t('row.statusCollapsed'), checked: global.statusCollapsed, onChange: (v) => setGlobalField('statusCollapsed', v) })),
           ]),
           section('advanced', [
             row(t('row.brandFirst'), `${t('row.brandFirst.hint')} · ${t('hint.defaultOff')}`,
@@ -1294,6 +1358,8 @@ window.__ModuleLoader__.load({
           'statusPending.hint': 'Sessions waiting for an answer get a warning edge',
           statusUnread: 'Unread completion: success marker',
           'statusUnread.hint': 'Finished sessions with unread results get a green edge',
+          statusCollapsed: 'Folded projects: status rollup',
+          'statusCollapsed.hint': 'A folded project mirrors the strongest status of its hidden sessions',
           brandFirst: 'Follow theme brand color',
           'brandFirst.hint': 'Automatic colors start from the active theme accent',
           colorblind: 'Color-friendly mode',
@@ -1318,6 +1384,7 @@ window.__ModuleLoader__.load({
           label: 'Live preview of the sidebar look', project: 'Example project', session: 'Session',
           color: 'Sample color', auto: 'Auto',
           running: 'Running', pending: 'Awaiting input', unread: 'Finished, unread', archived: 'Archived',
+          collapsed: 'Folded (running inside)',
           hide: 'Hide preview', show: 'Show preview',
         },
         data: {
@@ -1380,6 +1447,8 @@ window.__ModuleLoader__.load({
           'statusPending.hint': '等待你操作的会话行显示警告色边缘',
           statusUnread: '完成未读：成功标记',
           'statusUnread.hint': '已完成且结果未读的会话行显示绿色边缘',
+          statusCollapsed: '折叠项目：状态汇总',
+          'statusCollapsed.hint': '折叠起来的项目行镜像显示其隐藏会话中最优先的状态标记',
           brandFirst: '跟随主题品牌色',
           'brandFirst.hint': '自动配色优先使用当前主题的强调色',
           colorblind: '色彩友好模式',
@@ -1404,6 +1473,7 @@ window.__ModuleLoader__.load({
           label: '侧边栏效果实时预览', project: '示例项目', session: '会话',
           color: '示例颜色', auto: '自动',
           running: '运行中', pending: '等待输入', unread: '完成未读', archived: '已归档',
+          collapsed: '已折叠（内有会话运行中）',
           hide: '收起预览', show: '显示预览',
         },
         data: {

@@ -38,6 +38,7 @@
 ### 关键设计
 
 - **状态着色优先级**：等待输入 > 运行中 > 完成未读；运行中用 `@keyframes` + CSS 变量 `--dsh-ps-c` 做呼吸光环，等待/未读用主题语义 token（warn/success）
+- **折叠项目状态汇总**（1.8.0 追加）：折叠时宿主不挂载会话行，项目行经 `[aria-expanded="false"]` 镜像显示最优先的隐藏状态，展开即消失；项目行竖线/辉光/发线收进 `--dsh-ps-bar` 自定义属性供标记叠加，运行中动画用独立的 `dsh-ps-pulse-project` 关键帧保留竖线
 - **OKLCH**：sRGB↔线性↔LMS↔OKLCH 矩阵换算，明度抬向 0.74·k、彩度 ×(1+0.8k)，二分退火钳回 sRGB 色域；`C<0.03` 的灰色只提亮不染彩
 - **品牌色**：`{ id:'brand', value:'var(--dsw-alias-brand-primary)' }` 作为自动配色首槽；`var()` 色跳过 OKLCH 变换与文字补偿，辉光用 `color-mix` 直接混合
 - **强调覆盖**：只作用于渲染层（`buildCss`），不改动自动配色避让逻辑
